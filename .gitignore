@@ -118,6 +118,7 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
+categories/*
 stream-test/*.jpg
 stream-test/*.jpeg
 stream-test/*.png
