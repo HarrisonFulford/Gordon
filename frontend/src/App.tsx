@@ -10,7 +10,7 @@ export default function App() {
   }, []);
   
   return (
-    <Router>
+    <Router future={{ v7_relativeSplatPath: true }}>
       <div className="min-h-screen bg-background text-foreground">
         <Routes>
           <Route path="/" element={<RecipeSelection />} />

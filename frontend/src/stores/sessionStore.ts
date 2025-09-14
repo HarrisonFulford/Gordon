@@ -89,9 +89,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   toggleSpeaker: () => set((state) => ({ speakerEnabled: !state.speakerEnabled })),
   
   // Gordon integration actions
-  startCapture: async () => {
+  startCapture: async (timeline = []) => {
     try {
-      await gordonAPI.startSession();
+      await gordonAPI.startSession(timeline);
       set({ isCapturing: true });
       get().updateBackendStatus();
     } catch (error) {
@@ -126,7 +126,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   
   // Transport controls (Gordon integration)
   startSession: () => {
-    const { summary } = get();
+    console.log('🎬 Starting session from store');
+    const { summary, timeline } = get();
+    console.log('📋 Timeline data:', timeline);
     if (summary) {
       const now = Date.now();
       set({
@@ -137,7 +139,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       });
     }
     // Start webcam capture when session starts
-    get().startCapture();
+    get().startCapture(timeline);
   },
   pauseSession: () => {
     const { summary, sessionStartTime, pausedDuration, lastPauseTime } = get();

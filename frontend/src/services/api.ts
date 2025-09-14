@@ -64,7 +64,9 @@ class GordonAPI {
     if (!response.ok) {
       throw new Error('Backend health check failed');
     }
-    return response.json();
+    const result = await response.json();
+    console.log('✅ Session started successfully:', result);
+    return result;
   }
 
   /**
@@ -84,15 +86,21 @@ class GordonAPI {
       throw new Error(error.error || 'Recipe generation failed');
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('✅ Session started successfully:', result);
+    return result;
   }
 
   /**
    * Start cooking session (starts webcam capture)
    */
-  async startSession() {
+  async startSession(timeline: TimelineStep[] = []) {
     const response = await fetch(`${this.baseUrl}/session/start`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ timeline }),
     });
 
     if (!response.ok) {
@@ -100,7 +108,9 @@ class GordonAPI {
       throw new Error(error.error || 'Failed to start session');
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('✅ Session started successfully:', result);
+    return result;
   }
 
   /**
@@ -116,7 +126,9 @@ class GordonAPI {
       throw new Error(error.error || 'Failed to stop session');
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('✅ Session started successfully:', result);
+    return result;
   }
 
   /**
@@ -129,7 +141,9 @@ class GordonAPI {
       throw new Error('Failed to get session status');
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('✅ Session started successfully:', result);
+    return result;
   }
 
   /**
@@ -142,7 +156,9 @@ class GordonAPI {
       throw new Error('Failed to get categories');
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('✅ Session started successfully:', result);
+    return result;
   }
 
   /**
@@ -155,7 +171,9 @@ class GordonAPI {
       throw new Error(`Failed to get images for category: ${category}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('✅ Session started successfully:', result);
+    return result;
   }
 
   /**

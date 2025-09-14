@@ -1,0 +1,28 @@
+GORDON RAMSAY COOKING QUOTES
+========================================
+
+Step: step-1
+Time: 30s
+Quote: "Right! Let's get this mise en place sorted. Prep work is everything, come on!"
+------------------------------
+
+Step: step-2
+Time: 300s
+Quote: "Beautiful! Now we're cooking. Heat that pan up, let's go!"
+------------------------------
+
+Step: step-3
+Time: 600s
+Quote: "Keep going! Monitor those patties, we want them juicy and pink."
+------------------------------
+
+Step: step-4
+Time: 900s
+Quote: "That's it! Toast those buns, then assemble with care. Perfect burger, perfect burger!"
+------------------------------
+
+Step: step-5
+Time: 1200s
+Quote: "Perfect! That's how you finish a dish. Bloody beautiful work!"
+------------------------------
+

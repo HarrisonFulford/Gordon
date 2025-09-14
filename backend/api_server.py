@@ -16,6 +16,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 from backend.recipe_generator import get_recipe_generator
+from backend.gordon_quotes import generate_gordon_quotes_for_session
 from backend.config import CATEGORIES_DIR, SUPPORTED_FORMATS
 
 app = Flask(__name__)
@@ -122,7 +123,7 @@ def generate_recipes():
 
 @app.route('/api/session/start', methods=['POST'])
 def start_session():
-    """Start a cooking session (starts webcam capture)."""
+    """Start a cooking session (starts webcam capture and generates Gordon quotes)."""
     global webcam_process, session_active
     
     try:
@@ -132,6 +133,19 @@ def start_session():
                 'status': 'already_running',
                 'message': 'Webcam capture is already active'
             })
+        
+        # Get timeline from request body (sent from frontend)
+        timeline = request.json.get('timeline', []) if request.json else []
+        
+        # Generate Gordon Ramsay quotes for the timeline
+        quotes = []
+        if timeline:
+            try:
+                quotes = generate_gordon_quotes_for_session(timeline)
+                print(f"Generated {len(quotes)} Gordon quotes for session")
+            except Exception as e:
+                print(f"Error generating Gordon quotes: {e}")
+                # Continue without quotes if generation fails
         
         # Start webcam capture process
         webcam_process = subprocess.Popen(
@@ -146,7 +160,9 @@ def start_session():
         return jsonify({
             'status': 'started',
             'message': 'Webcam capture started successfully',
-            'pid': webcam_process.pid
+            'pid': webcam_process.pid,
+            'quotes_generated': len(quotes),
+            'quotes': quotes
         })
         
     except Exception as e:
@@ -154,7 +170,6 @@ def start_session():
             'status': 'error',
             'error': f'Failed to start session: {str(e)}'
         }), 500
-
 
 @app.route('/api/session/stop', methods=['POST'])
 def stop_session():
