@@ -188,6 +188,31 @@ class GordonAPI {
   getCategoryImageUrl(category: string, filename: string): string {
     return `${this.baseUrl}/categories/${category}/image/${filename}`;
   }
+
+  /**
+   * Send speech to Gordon for interactive response
+   */
+  async sendSpeechToGordon(speech: string, context?: string) {
+    const response = await fetch(`${this.baseUrl}/speech/interact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        speech,
+        context: context || ''
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Speech interaction failed');
+    }
+
+    const result = await response.json();
+    console.log('✅ Gordon responded:', result);
+    return result;
+  }
 }
 
 // Export singleton instance

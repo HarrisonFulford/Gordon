@@ -7,6 +7,7 @@ import { SessionClock } from '../components/SessionClock';
 import { NextActionCard } from '../components/NextActionCard';
 import { Timeline } from '../components/Timeline';
 import { Transport } from '../components/Transport';
+import { PushToTalk } from '../components/PushToTalk';
 import { useSessionStore } from '../stores/sessionStore';
 import { gordonAPI } from '../services/api';
 
@@ -217,10 +218,13 @@ export function LiveSession() {
       
       switch (e.key.toLowerCase()) {
         case ' ':
-          e.preventDefault();
+          // Only use spacebar for play/pause when session is idle
+          // During active sessions, spacebar is used for push-to-talk
           if (summary?.status === 'idle') {
+            e.preventDefault();
             startSession();
           }
+          // Note: Push-to-talk handles spacebar during active sessions
           break;
         case 'r':
           if (!e.metaKey && !e.ctrlKey) {
@@ -365,6 +369,21 @@ export function LiveSession() {
               etaSeconds={nextAction.next.t - nextAction.nowSeconds}
               nowSeconds={nextAction.nowSeconds}
             />
+            
+            {/* Push-to-talk component */}
+            <PushToTalk
+              enabled={ttsEnabled}
+              sessionActive={summary.status === 'running'}
+              currentStep={nextAction.next.text}
+              onGordonResponse={(response) => {
+                addLogEntry({
+                  ts: Date.now(),
+                  icon: 'message',
+                  msg: `Gordon: "${response}"`,
+                  type: 'gordon_response'
+                });
+              }}
+            />
           </motion.div>
           
           {/* Bottom Right: Timeline */}
@@ -402,13 +421,21 @@ export function LiveSession() {
           transition={{ duration: 0.4, delay: 0.5 }}
         >
           <p>
-            Keyboard shortcuts: <kbd>Space</kbd> = Play/Pause, 
+            Keyboard shortcuts: 
+            <kbd>Space</kbd> = {summary.status === 'idle' ? 'Start Session' : 'Hold to Talk to Gordon'}, 
             <kbd>R</kbd> = Repeat instruction, <kbd>L</kbd> = Toggle TTS
           </p>
           {ttsEnabled && (
-            <p className="mt-2 text-green-500 font-medium">
-              🎙️ Gordon will speak cooking instructions at the right time!
-            </p>
+            <div className="mt-2 space-y-1">
+              <p className="text-green-500 font-medium">
+                🎙️ Gordon will speak cooking instructions at the right time!
+              </p>
+              {summary.status === 'running' && (
+                <p className="text-blue-500 font-medium">
+                  💬 Hold <kbd>Space</kbd> to talk to Gordon and get instant responses!
+                </p>
+              )}
+            </div>
           )}
         </motion.div>
       </div>

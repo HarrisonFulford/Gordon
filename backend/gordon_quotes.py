@@ -21,7 +21,7 @@ class GordonQuoteGenerator:
         self.client = cohere.Client(COHERE_API_KEY)
         self.v2_client = self.client.v2
         
-        self.gordon_prompt = """You are Gordon Ramsay. Generate cooking quotes in his signature style for the given cooking steps.
+        self.gordon_prompt = """You are Gordon Ramsay generating SPECIFIC cooking quotes for the given cooking steps. Each quote must be DIRECTLY related to the actual cooking action being performed.
 
 GORDON RAMSAY STYLE RULES:
 - Use his signature phrases: "Right!", "Come on!", "Beautiful!", "Perfect!", "Bloody hell!"
@@ -31,49 +31,83 @@ GORDON RAMSAY STYLE RULES:
 - Keep it concise and punchy (1-2 sentences max)
 - Match the energy to the step type (prep = focused, cook = energetic, end = celebratory)
 
+CRITICAL REQUIREMENTS:
+1. Each quote MUST reference the SPECIFIC cooking action in that step
+2. Use the EXACT ingredients/techniques mentioned in each step
+3. NO generic quotes - every quote must be unique to its step
+4. Reference cooking times, temperatures, or techniques when mentioned
+5. Build on the previous step's progress when appropriate
+
 Return ONLY JSON in this EXACT format (no extra text):
 {
   "quotes": [
     {
       "stepId": "step-1",
       "timestamp": 30,
-      "quote": "Right! Let's get this mise en place sorted. Prep work is everything, come on!"
+      "quote": "[Quote specifically about the prep action mentioned in step-1]"
     },
     {
       "stepId": "step-2", 
       "timestamp": 300,
-      "quote": "Beautiful! Now we're cooking. Heat that pan up, let's go!"
-    },
-    {
-      "stepId": "step-final",
-      "timestamp": 1500,
-      "quote": "Perfect! That's how you finish a dish. Bloody beautiful work!"
+      "quote": "[Quote specifically about the cooking technique in step-2]"
     }
   ]
 }
+
+EXAMPLE TRANSFORMATIONS:
+- Step: "Dice the onions into 1/4 inch pieces" → "Right! Nice even dice on those onions. Quarter-inch pieces, that's perfect!"
+- Step: "Sear the chicken breast for 4 minutes per side" → "Beautiful! Listen to that sizzle. Four minutes each side, don't touch it!"
+- Step: "Add garlic and cook until fragrant" → "Perfect! Now the garlic goes in. Thirty seconds until fragrant, come on!"
 
 CRITICAL RULES:
 1. First step quote should be at timestamp 30 (30 seconds in)
 2. All other quotes should match their step's tStart timestamp
 3. Include one quote for the final step (end of session)
-4. Keep quotes short and punchy (1-2 sentences)
-5. Use Gordon's signature style and phrases
-6. Match the energy to the step type and context"""
+4. Each quote must be SPECIFIC to its step's cooking action
+5. Use Gordon's signature style but make it relevant
+6. NO repetitive or generic motivational quotes"""
 
     def generate_quotes_for_timeline(self, timeline: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Generate Gordon Ramsay quotes for a cooking timeline."""
         if not timeline:
             return []
         
-        # Create context for the prompt
+        # Create detailed context for the prompt
         steps_context = []
-        for step in timeline:
-            steps_context.append(f"Step {step['id']}: {step['text']} (Type: {step['type']}, Start: {step['tStart']}s)")
+        for i, step in enumerate(timeline):
+            step_number = i + 1
+            step_type = step.get('type', 'instruction')
+            step_category = step.get('category', 'general')
+            step_text = step.get('text', '')
+            start_time = step.get('tStart', 0)
+            end_time = step.get('tEnd', start_time + 300)
+            duration = end_time - start_time
+            
+            context_line = f"Step {step_number} ({step['id']}): \"{step_text}\""
+            context_line += f" | Type: {step_type} | Category: {step_category}"
+            context_line += f" | Time: {start_time}s-{end_time}s ({duration//60}min {duration%60}s duration)"
+            
+            steps_context.append(context_line)
         
         context = "\n".join(steps_context)
         
-        # Create the full prompt
-        full_prompt = f"{self.gordon_prompt}\n\nCOOKING STEPS:\n{context}\n\nGenerate quotes for these steps:"
+        # Create the full prompt with detailed instructions
+        full_prompt = f"""{self.gordon_prompt}
+
+COOKING TIMELINE DETAILS:
+{context}
+
+QUOTE GENERATION INSTRUCTIONS:
+- Create a unique quote for each step that directly references the cooking action
+- Use specific ingredients, techniques, or timings mentioned in each step
+- Make each quote feel like Gordon is watching and coaching that exact moment
+- Vary the language and approach for each step to avoid repetition
+- For prep steps: Focus on technique and precision
+- For cooking steps: Focus on heat, timing, and sensory cues
+- For final steps: Focus on presentation and completion
+- IMPORTANT: Each quote must be distinctly different - no repeated phrases or structures
+
+Generate quotes for these specific cooking steps:"""
         
         try:
             response = self.v2_client.chat(
@@ -84,8 +118,8 @@ CRITICAL RULES:
                         "content": full_prompt
                     }
                 ],
-                max_tokens=500,
-                temperature=0.8
+                max_tokens=800,  # Increased for more detailed responses
+                temperature=0.6  # Balanced creativity and consistency
             )
             
             # Parse response

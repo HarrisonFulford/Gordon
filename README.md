@@ -11,8 +11,8 @@ An intelligent cooking companion that combines computer vision, AI recipe genera
 
 ### 📸 Real-Time Kitchen Monitoring
 - Captures webcam frames during cooking sessions
-- AI-powered image classification and organization
-- Automatic cleanup and categorization of captured images
+- AI-powered food ingredient classification (cheese, pickles, bread, tomatoes, lettuce, meat)
+- Automatic cleanup and categorization of captured ingredient images
 
 ### 🎙️ Gordon Ramsay Voice Integration
 - **Custom Gordon Ramsay voice** using ElevenLabs TTS
@@ -139,6 +139,7 @@ Gordon uses a **subprocess approach** to leverage the working `voice-testing` im
 - `POST /api/session/start` - Start cooking session (webcam + TTS)
 - `POST /api/session/stop` - Stop cooking session
 - `GET /api/session/status` - Get session status (includes TTS status)
+- `POST /api/speech/interact` - Interactive speech with Gordon (NEW!)
 - `GET /api/health` - Health check
 
 ## Troubleshooting
@@ -148,6 +149,12 @@ Gordon uses a **subprocess approach** to leverage the working `voice-testing` im
 2. **Check API key**: Ensure `ELEVENLABS_API_KEY` is in both `.env` files
 3. **Check Gordon voice**: Voice ID `2qkO9rb42qS5jRK9294E` must exist in your account
 4. **Check paths**: Ensure `voice-testing` directory exists at `../voice-testing`
+
+### Push-to-Talk Issues
+1. **Microphone permission**: Browser must have microphone access
+2. **HTTPS required**: Speech recognition requires secure connection in production
+3. **Browser support**: Works in Chrome, Firefox, Safari (latest versions)
+4. **Session active**: Feature only works during active cooking sessions
 
 ### Frontend Issues
 - **Wrong port**: Frontend should be on `http://localhost:5173`, not 3000
@@ -162,7 +169,7 @@ Gordon uses a **subprocess approach** to leverage the working `voice-testing` im
 ## Dependencies
 
 ### Core Dependencies (Gordon)
-- `cohere>=5.0.0` - AI recipe generation and image classification
+- `cohere>=5.0.0` - AI recipe generation and ingredient classification
 - `opencv-python>=4.5.0` - Webcam capture and image processing
 - `flask>=2.3.0` - API server
 - `pillow>=9.0.0` - Image manipulation

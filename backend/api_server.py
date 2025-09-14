@@ -17,8 +17,9 @@ from werkzeug.utils import secure_filename
 
 from backend.recipe_generator import get_recipe_generator
 from backend.gordon_quotes import generate_gordon_quotes_for_session
+from backend.gordon_response import generate_gordon_response
 from backend.config import CATEGORIES_DIR, SUPPORTED_FORMATS
-from backend.tts_service import get_quote_scheduler
+from backend.tts_service import get_quote_scheduler, get_tts_service
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React development
@@ -34,8 +35,9 @@ session_active = False
 current_session_id = None
 session_start_time = None
 
-# Get TTS scheduler instance
+# Get TTS services
 quote_scheduler = get_quote_scheduler()
+tts_service = get_tts_service()
 
 # Ensure directories exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -156,11 +158,15 @@ def start_session():
                 # Continue without quotes if generation fails
         
         # Start webcam capture process
+        import sys
+        python_executable = sys.executable  # Use the same Python that's running the API server
+        
         webcam_process = subprocess.Popen(
-            ['python3', '-m', 'backend.webcam_capture'],
+            [python_executable, '-m', 'backend.webcam_capture'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Run from Gordon root
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),  # Run from Gordon root
+            env=os.environ.copy()  # Pass environment variables including camera config
         )
         
         # Record session start time
@@ -310,6 +316,61 @@ def serve_category_image(category, filename):
         return "Image not found", 404
     
     return send_from_directory(category_path, filename)
+
+
+@app.route('/api/speech/interact', methods=['POST'])
+def speech_interact():
+    """Handle speech interaction with Gordon during cooking sessions."""
+    global session_active, current_session_id
+    
+    # Only allow during active sessions
+    if not session_active or not current_session_id:
+        return jsonify({
+            'error': 'Speech interaction only available during active cooking sessions'
+        }), 400
+    
+    try:
+        data = request.json
+        if not data or 'speech' not in data:
+            return jsonify({'error': 'No speech text provided'}), 400
+        
+        user_speech = data['speech'].strip()
+        if not user_speech:
+            return jsonify({'error': 'Empty speech text'}), 400
+        
+        # Get cooking context if available
+        cooking_context = data.get('context', '')
+        
+        print(f"👤 User speech: \"{user_speech}\"")
+        
+        # Generate Gordon's response
+        gordon_response = generate_gordon_response(user_speech, cooking_context)
+        
+        if not gordon_response:
+            return jsonify({'error': 'Failed to generate Gordon response'}), 500
+        
+        print(f"🍳 Gordon response: \"{gordon_response}\"")
+        
+        # Play Gordon's response immediately via TTS
+        tts_success = False
+        if tts_service.is_initialized:
+            try:
+                tts_success = tts_service.play_audio_immediately(gordon_response)
+                print(f"🔊 TTS playback: {'✅ Success' if tts_success else '❌ Failed'}")
+            except Exception as e:
+                print(f"❌ TTS playback error: {e}")
+        
+        return jsonify({
+            'user_speech': user_speech,
+            'gordon_response': gordon_response,
+            'tts_played': tts_success,
+            'session_id': current_session_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': f'Speech interaction failed: {str(e)}'
+        }), 500
 
 
 @app.errorhandler(413)

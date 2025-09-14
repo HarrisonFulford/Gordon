@@ -63,18 +63,28 @@ class RealTimeClassifier:
         
         # Create the system prompt once
         classes_str = ', '.join(CLASSES)
-        self.system_prompt = f"""You are a strict image classifier. Look at each image and classify it as EXACTLY one of these categories: {classes_str}
+        self.system_prompt = f"""You are a strict food ingredient classifier. Look at each image and classify it as EXACTLY one of these food categories: {classes_str}
 
 CRITICAL RULES:
-1. Only classify if the image CLEARLY shows one of these objects
-2. Be VERY strict - if unsure, classify as "irrelevant"
-3. Return ONLY JSON in this exact format:
+1. Only classify if the image CLEARLY shows one of these food ingredients
+2. Be VERY strict - if unsure or if it's not food, classify as "irrelevant"
+3. Look for the MAIN ingredient visible in the image
+4. Return ONLY JSON in this exact format:
 {{"class": "category_name_or_irrelevant", "confidence": 0.95}}
 
 Valid responses:
-- {{"class": "chair", "confidence": 0.9}}
-- {{"class": "door", "confidence": 0.8}}
+- {{"class": "cheese", "confidence": 0.9}}
+- {{"class": "tomatoes", "confidence": 0.8}}
+- {{"class": "meat", "confidence": 0.85}}
 - {{"class": "irrelevant", "confidence": 0.7}}
+
+FOOD CLASSIFICATION GUIDELINES:
+- cheese: Any type of cheese (cheddar, mozzarella, swiss, etc.)
+- pickles: Pickled vegetables, cucumber pickles
+- bread: Bread, buns, rolls, toast
+- tomatoes: Fresh tomatoes, cherry tomatoes
+- lettuce: Lettuce, leafy greens, salad greens
+- meat: Beef, chicken, pork, deli meat, etc.
 
 NO explanations, NO reasoning, NO extra text - just the JSON."""
 

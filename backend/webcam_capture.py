@@ -2,7 +2,7 @@
 """
 Real-time Webcam Capture with AI Classification
 Captures frames from webcam every 2 seconds, classifies them in real-time,
-and organizes them into category folders (chair/door) with automatic cleanup.
+and organizes them into category folders (food ingredients) with automatic cleanup.
 """
 
 import cv2
@@ -11,6 +11,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 from .classifier import classify_and_organize_image
+from .camera_utils import find_best_camera, test_camera
+from .config import SHOW_CAMERA_PREVIEW
 
 def get_timestamp_filename():
     """Generate filename with format YYYYMMDD_HHMMSSmmm"""
@@ -26,21 +28,53 @@ def main():
     # Create temp folder if it doesn't exist
     os.makedirs(TEMP_FOLDER, exist_ok=True)
     
-    # Initialize webcam
-    cap = cv2.VideoCapture(1)
+    # Find the best camera (prioritizing Logitech MXBrio)
+    print("🔍 Detecting cameras...")
+    camera_index = find_best_camera()
+    
+    # Test the selected camera
+    if not test_camera(camera_index):
+        print(f"❌ Selected camera {camera_index} not working, trying alternatives...")
+        # Try other common indices
+        for backup_index in [0, 1, 2, 3]:
+            if test_camera(backup_index):
+                camera_index = backup_index
+                print(f"✅ Using backup camera {camera_index}")
+                break
+        else:
+            print("❌ No working cameras found!")
+            return
+    
+    # Initialize webcam with selected camera
+    cap = cv2.VideoCapture(camera_index)
     
     if not cap.isOpened():
-        print("Error: Could not open webcam")
+        print(f"❌ Error: Could not open camera {camera_index}")
         return
     
+    # Get camera info and verify it's the right one
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    
     print("🚀 Real-time Webcam Classification Started!")
+    print(f"📸 Using camera {camera_index}: {width}x{height} @ {fps:.1f}fps")
     print("📸 Capturing frames every 2 seconds")
     print("🤖 Classifying with Cohere Aya Vision")
-    print("📁 Organizing into categories: chair, door")
+    print("📁 Organizing into categories: cheese, pickles, bread, tomatoes, lettuce, meat")
     print("🗑️  Deleting irrelevant images automatically")
     print("📊 Max 10 images per category")
     print("\nPress 'q' to quit")
     print("-" * 50)
+    
+    # Verify camera is working by taking a test frame
+    ret, test_frame = cap.read()
+    if ret and test_frame is not None:
+        print(f"✅ Camera {camera_index} verified working - frame size: {test_frame.shape}")
+    else:
+        print(f"❌ Camera {camera_index} test frame failed!")
+        cap.release()
+        return
     
     last_capture_time = 0
     capture_count = 0
@@ -52,14 +86,32 @@ def main():
             ret, frame = cap.read()
             
             if not ret:
-                print("Error: Could not read frame from webcam")
-                break
+                print(f"❌ Error: Could not read frame from camera {camera_index}")
+                
+                # Try to reinitialize the camera
+                cap.release()
+                print(f"🔄 Attempting to reinitialize camera {camera_index}...")
+                cap = cv2.VideoCapture(camera_index)
+                
+                if not cap.isOpened():
+                    print(f"❌ Failed to reinitialize camera {camera_index}")
+                    break
+                else:
+                    print(f"✅ Camera {camera_index} reinitialized successfully")
+                    continue
             
             current_time = time.time()
             
             # Capture frame every 2 seconds
             if current_time - last_capture_time >= CAPTURE_INTERVAL:
                 capture_count += 1
+                
+                # Verify we're still using the right camera every 10 captures
+                if capture_count % 10 == 0:
+                    current_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    current_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    current_fps = cap.get(cv2.CAP_PROP_FPS)
+                    print(f"🔍 Camera check #{capture_count//10}: {current_width}x{current_height} @ {current_fps:.1f}fps")
                 
                 # Generate filename with timestamp
                 filename = f"{get_timestamp_filename()}.{IMAGE_FORMAT}"
@@ -69,7 +121,7 @@ def main():
                 success = cv2.imwrite(temp_filepath, frame)
                 
                 if success:
-                    print(f"📸 Captured #{capture_count}: {filename}")
+                    print(f"📸 Captured #{capture_count}: {filename} (camera {camera_index})")
                     
                     # Real-time classification and organization
                     try:
@@ -100,12 +152,16 @@ def main():
                 
                 last_capture_time = current_time
             
-            # Display the frame
-            cv2.imshow('Real-time Classification', frame)
-            
-            # Check for quit command
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            # Display the frame (optional)
+            if SHOW_CAMERA_PREVIEW:
+                cv2.imshow('Real-time Classification', frame)
+                
+                # Check for quit command (only if preview is shown)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            else:
+                # If no preview, just check for Ctrl+C
+                time.sleep(0.01)  # Small delay to prevent CPU spinning
                 
     except KeyboardInterrupt:
         print("\n⏹️  Capture interrupted by user")
@@ -113,7 +169,8 @@ def main():
     finally:
         # Clean up
         cap.release()
-        cv2.destroyAllWindows()
+        if SHOW_CAMERA_PREVIEW:
+            cv2.destroyAllWindows()
         
         # Clean up temp folder
         try:
@@ -130,7 +187,7 @@ def main():
         
         # Show final category contents
         print(f"\n📁 Final category contents:")
-        for category in ['chair', 'door']:
+        for category in ['cheese', 'pickles', 'bread', 'tomatoes', 'lettuce', 'meat']:
             category_path = Path(f'categories/{category}')
             if category_path.exists():
                 images = list(category_path.glob('*.jpg'))

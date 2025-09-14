@@ -3,26 +3,31 @@ GORDON RAMSAY COOKING QUOTES
 
 Step: step-1
 Time: 30s
-Quote: "Right! Let's get this mise en place sorted. Prep work is everything, come on!"
+Quote: "Come on! Get those tomatoes and lettuce prepped. Quarter-inch dice on the tomatoes, nice and uniform. Bite-sized lettuce pieces, we're going for a fresh crunch!"
 ------------------------------
 
 Step: step-2
 Time: 300s
-Quote: "Beautiful! Now we're cooking. Heat that pan up, let's go!"
+Quote: "Perfect! Now we're mixing it up. Ground beef, garlic, olive oil, and our seasoning blend. Flatten and twist, make sure that flavor is evenly distributed."
 ------------------------------
 
 Step: step-3
 Time: 600s
-Quote: "That's it! Keep an eye on those patties. You've got this!"
+Quote: "Beautiful! These patties are taking shape. Four equal pieces, slightly bigger than the buns. Press them down gently, we want them to hold their shape."
 ------------------------------
 
 Step: step-4
 Time: 900s
-Quote: "Perfect! Toast those buns, then assemble. That's the way!"
+Quote: "Right! The grill's hot and ready. Lightly oil those grates, we don't want our patties sticking. Medium-high heat, let's get that sear on!"
 ------------------------------
 
 Step: step-5
 Time: 1200s
-Quote: "Bloody hell! We did it! Burgers, mayonnaise, pickles. That's a winning combination!"
+Quote: "Don't touch it! Four minutes per side, that's the game. Flip halfway through, and watch those patties sizzle. You've got this, they'll be juicy and perfect."
+------------------------------
+
+Step: step-6
+Time: 1500s
+Quote: "Perfect finish! Those veggie burgers are going to be a hit. Stack them high, add some fresh toppings, and you've got a masterpiece. Bloody hell, this looks amazing!"
 ------------------------------
 

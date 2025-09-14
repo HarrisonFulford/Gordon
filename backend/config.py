@@ -16,10 +16,19 @@ COHERE_MODEL = os.getenv('COHERE_MODEL', 'c4ai-aya-vision-8b')
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 GORDON_VOICE_ID = os.getenv('GORDON_VOICE_ID', '2qkO9rb42qS5jRK9294E')  # Default Gordon voice ID
 
+# Camera Configuration
+PREFERRED_CAMERA = os.getenv('PREFERRED_CAMERA', 'auto')  # 'auto', 'logitech', or specific index like '1'
+CAMERA_RESOLUTION = (1920, 1080)  # Preferred resolution for high-quality capture
+SHOW_CAMERA_PREVIEW = os.getenv('SHOW_CAMERA_PREVIEW', 'true').lower() == 'true'  # Show OpenCV preview window
+
 # Classification settings
 CLASSES = [
-    "chair",
-    "door"
+    "cheese",
+    "pickles", 
+    "bread",
+    "tomatoes",
+    "lettuce",
+    "meat"
 ]
 
 # Image settings

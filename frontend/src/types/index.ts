@@ -36,7 +36,7 @@ export interface LogEntry {
   ts: number;
   icon: string;
   msg: string;
-  type: 'instruction' | 'progress' | 'end' | 'system';
+  type: 'instruction' | 'progress' | 'end' | 'system' | 'gordon_response';
 }
 
 export interface WSMessage {
