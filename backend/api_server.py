@@ -135,7 +135,7 @@ def start_session():
         
         # Start webcam capture process
         webcam_process = subprocess.Popen(
-            ['python3', 'backend/webcam_capture.py'],
+            ['python3', '-m', 'backend.webcam_capture'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Run from Gordon root

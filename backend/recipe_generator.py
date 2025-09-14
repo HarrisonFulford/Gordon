@@ -62,6 +62,8 @@ class RecipeGenerator:
         # Recipe generation prompt
         self.recipe_prompt = """Look at this image of ingredients and suggest 2-5 realistic recipes I can make with what's visible.
 
+Analyze the ingredients carefully and create specific, detailed cooking steps that are appropriate for those exact ingredients. Do NOT use generic placeholder steps.
+
 Return ONLY JSON in this EXACT format (no extra text):
 {
   "recipes": [
@@ -69,35 +71,29 @@ Return ONLY JSON in this EXACT format (no extra text):
       "id": "recipe-slug-name",
       "name": "Recipe Name",
       "description": "Brief appetizing description in one sentence",
-      "cookTime": 25,
-      "servings": 4,
-      "difficulty": "Easy",
+      "cookTime": 1-120,
+      "servings": 1-4,
+      "difficulty": "Easy | Medium | Hard",
       "category": "cuisine type",
-      "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
-      "imageUrl": "https://images.unsplash.com/photo-example?w=400&h=300&fit=crop",
+      "ingredients": ["ingredient1", "ingredient2", "ingredient3", ..., "ingredientN"],
       "timeline": [
         {
           "id": "step-1",
           "tStart": 0,
           "tEnd": 300,
           "type": "instruction",
-          "text": "Prep all ingredients and mise en place",
+          "text": "Specific prep step for these exact ingredients",
           "category": "prep"
         },
         {
-          "id": "step-2",
-          "tStart": 300,
-          "tEnd": 600,
-          "type": "instruction", 
-          "text": "Heat pan and begin cooking",
-          "category": "cook"
+          ...
         },
         {
-          "id": "step-3",
+          "id": "step-N",
           "tStart": 600,
           "tEnd": 900,
           "type": "progress",
-          "text": "Monitor cooking progress",
+          "text": "Specific monitoring step for this dish",
           "category": "cook"
         },
         {
@@ -105,7 +101,7 @@ Return ONLY JSON in this EXACT format (no extra text):
           "tStart": 900,
           "tEnd": 1500,
           "type": "end",
-          "text": "Final seasoning and plating",
+          "text": "Specific finishing step for this dish",
           "category": "finish"
         }
       ]
@@ -115,14 +111,17 @@ Return ONLY JSON in this EXACT format (no extra text):
 
 CRITICAL RULES:
 1. Timeline must span exactly the cookTime duration (in seconds) - convert cookTime minutes to seconds for tStart/tEnd
-2. Use realistic cooking steps and timing - each step should have logical duration
-3. Include prep, cooking, and finishing steps with proper sequencing
-4. difficulty must be: "Easy", "Medium", or "Hard"
-5. type must be: "instruction", "progress", or "end"
-6. Use realistic Unsplash URLs for imageUrl
-7. Only suggest recipes possible with visible ingredients
-8. Ensure tEnd of final step equals cookTime * 60 (total seconds)"""
-
+2. Create SPECIFIC cooking steps based on the actual ingredients visible in the image, each step should be more than 2 minutes long
+3. Each step should be detailed and actionable (e.g., "Dice the onions into 1/4 inch pieces" not "Prep ingredients")
+4. Include realistic timing for each step based on the cooking method and ingredients
+5. Include prep, cooking, and finishing steps with proper sequencing
+6. difficulty must be: "Easy", "Medium", or "Hard"
+7. type must be: "instruction", "progress", or "end"
+8. Only suggest recipes possible with visible ingredients
+9. Ensure tEnd of final step equals cookTime * 60 (total seconds)
+10. Make steps specific to the dish being made (e.g., "Sear the chicken breast for 4 minutes per side" not "Cook the meat")
+11. Include proper cooking techniques for the specific ingredients (e.g., "Sauté the garlic until fragrant" not "Heat the pan")
+12. Include AT LEAST 1 step of each type (progress, instruction, end)"""
     def generate_recipes_from_image(self, image_path: Path) -> Dict[str, Any]:
         """Generate recipes from an ingredient image."""
         # Resize image if needed

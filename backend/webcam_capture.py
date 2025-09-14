@@ -10,7 +10,7 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
-from backend.classifier import classify_and_organize_image
+from .classifier import classify_and_organize_image
 
 def get_timestamp_filename():
     """Generate filename with format YYYYMMDD_HHMMSSmmm"""
@@ -27,7 +27,7 @@ def main():
     os.makedirs(TEMP_FOLDER, exist_ok=True)
     
     # Initialize webcam
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     
     if not cap.isOpened():
         print("Error: Could not open webcam")

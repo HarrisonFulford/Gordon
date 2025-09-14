@@ -14,7 +14,7 @@ from typing import Dict, Any, Optional
 import cohere
 from PIL import Image
 
-from backend.config import (
+from .config import (
     COHERE_API_KEY, COHERE_MODEL, CLASSES, MAX_IMAGE_SIZE, 
     SUPPORTED_FORMATS, CATEGORIES_DIR, MAX_IMAGES_PER_CATEGORY,
     MAX_RETRIES, REQUEST_TIMEOUT
