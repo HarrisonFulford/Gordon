@@ -30,6 +30,9 @@ export interface SessionStatus {
   session_active: boolean;
   webcam_running: boolean;
   pid?: number;
+  session_id?: string;
+  session_start_time?: number;
+  tts_enabled: boolean;
   categories: {
     [category: string]: {
       count: number;
@@ -92,15 +95,18 @@ class GordonAPI {
   }
 
   /**
-   * Start cooking session (starts webcam capture)
+   * Start cooking session (starts webcam capture and TTS)
    */
-  async startSession(timeline: TimelineStep[] = []) {
+  async startSession(timeline: TimelineStep[] = [], sessionId?: string) {
     const response = await fetch(`${this.baseUrl}/session/start`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ timeline }),
+      body: JSON.stringify({ 
+        timeline,
+        session_id: sessionId || `session_${Date.now()}`
+      }),
     });
 
     if (!response.ok) {
@@ -114,7 +120,7 @@ class GordonAPI {
   }
 
   /**
-   * Stop cooking session (stops webcam capture)
+   * Stop cooking session (stops webcam capture and TTS)
    */
   async stopSession() {
     const response = await fetch(`${this.baseUrl}/session/stop`, {

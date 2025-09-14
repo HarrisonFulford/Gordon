@@ -13,16 +13,16 @@ Quote: "Beautiful! Now we're cooking. Heat that pan up, let's go!"
 
 Step: step-3
 Time: 600s
-Quote: "Keep going! Monitor those patties, we want them juicy and pink."
+Quote: "That's it! Keep an eye on those patties. You've got this!"
 ------------------------------
 
 Step: step-4
 Time: 900s
-Quote: "That's it! Toast those buns, then assemble with care. Perfect burger, perfect burger!"
+Quote: "Perfect! Toast those buns, then assemble. That's the way!"
 ------------------------------
 
 Step: step-5
 Time: 1200s
-Quote: "Perfect! That's how you finish a dish. Bloody beautiful work!"
+Quote: "Bloody hell! We did it! Burgers, mayonnaise, pickles. That's a winning combination!"
 ------------------------------
 

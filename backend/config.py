@@ -12,6 +12,10 @@ load_dotenv()
 COHERE_API_KEY = os.getenv('COHERE_API_KEY')
 COHERE_MODEL = os.getenv('COHERE_MODEL', 'c4ai-aya-vision-8b')
 
+# ElevenLabs API Configuration
+ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+GORDON_VOICE_ID = os.getenv('GORDON_VOICE_ID', '2qkO9rb42qS5jRK9294E')  # Default Gordon voice ID
+
 # Classification settings
 CLASSES = [
     "chair",

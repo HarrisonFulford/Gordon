@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { SessionClock } from '../components/SessionClock';
@@ -16,6 +16,7 @@ export function LiveSession() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [ttsEnabled, setTtsEnabled] = useState(false);
   
   const {
     summary,
@@ -106,6 +107,7 @@ export function LiveSession() {
       try {
         const status = await gordonAPI.getSessionStatus();
         setConnected(true);
+        setTtsEnabled(status.tts_enabled);
         
         // Update next action based on current time
         if (timeline.length > 0) {
@@ -303,6 +305,21 @@ export function LiveSession() {
             </div>
             
             <div className="flex items-center gap-4">
+              {/* TTS Status Indicator */}
+              <div className="flex items-center gap-2 text-sm">
+                {ttsEnabled ? (
+                  <>
+                    <Volume2 className="w-4 h-4 text-green-500" />
+                    <span className="text-green-500">Gordon TTS Active</span>
+                  </>
+                ) : (
+                  <>
+                    <VolumeX className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">TTS Disabled</span>
+                  </>
+                )}
+              </div>
+              
               {/* Transport controls */}
               <Transport
                 status={summary.status === 'paused' ? 'idle' : summary.status}
@@ -388,6 +405,11 @@ export function LiveSession() {
             Keyboard shortcuts: <kbd>Space</kbd> = Play/Pause, 
             <kbd>R</kbd> = Repeat instruction, <kbd>L</kbd> = Toggle TTS
           </p>
+          {ttsEnabled && (
+            <p className="mt-2 text-green-500 font-medium">
+              🎙️ Gordon will speak cooking instructions at the right time!
+            </p>
+          )}
         </motion.div>
       </div>
     </div>

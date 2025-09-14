@@ -18,6 +18,7 @@ from werkzeug.utils import secure_filename
 from backend.recipe_generator import get_recipe_generator
 from backend.gordon_quotes import generate_gordon_quotes_for_session
 from backend.config import CATEGORIES_DIR, SUPPORTED_FORMATS
+from backend.tts_service import get_quote_scheduler
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React development
@@ -30,6 +31,11 @@ ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
 # Global state
 webcam_process: Optional[subprocess.Popen] = None
 session_active = False
+current_session_id = None
+session_start_time = None
+
+# Get TTS scheduler instance
+quote_scheduler = get_quote_scheduler()
 
 # Ensure directories exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -123,8 +129,8 @@ def generate_recipes():
 
 @app.route('/api/session/start', methods=['POST'])
 def start_session():
-    """Start a cooking session (starts webcam capture and generates Gordon quotes)."""
-    global webcam_process, session_active
+    """Start a cooking session (starts webcam capture and generates Gordon quotes with TTS)."""
+    global webcam_process, session_active, current_session_id, session_start_time
     
     try:
         # Check if already running
@@ -134,8 +140,10 @@ def start_session():
                 'message': 'Webcam capture is already active'
             })
         
-        # Get timeline from request body (sent from frontend)
-        timeline = request.json.get('timeline', []) if request.json else []
+        # Get timeline and session info from request body (sent from frontend)
+        request_data = request.json or {}
+        timeline = request_data.get('timeline', [])
+        session_id = request_data.get('session_id', f'session_{int(time.time())}')
         
         # Generate Gordon Ramsay quotes for the timeline
         quotes = []
@@ -155,14 +163,27 @@ def start_session():
             cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Run from Gordon root
         )
         
+        # Record session start time
+        session_start_time = time.time()
+        current_session_id = session_id
         session_active = True
+        
+        # Start TTS quote scheduler if quotes are available
+        if quotes and quote_scheduler.tts_service.is_initialized:
+            try:
+                quote_scheduler.start_session(session_id, quotes, session_start_time)
+                print(f"✅ Started TTS quote scheduler for session {session_id}")
+            except Exception as e:
+                print(f"❌ Failed to start TTS quote scheduler: {e}")
         
         return jsonify({
             'status': 'started',
             'message': 'Webcam capture started successfully',
             'pid': webcam_process.pid,
+            'session_id': session_id,
             'quotes_generated': len(quotes),
-            'quotes': quotes
+            'quotes': quotes,
+            'tts_enabled': quote_scheduler.tts_service.is_initialized
         })
         
     except Exception as e:
@@ -173,10 +194,18 @@ def start_session():
 
 @app.route('/api/session/stop', methods=['POST'])
 def stop_session():
-    """Stop the cooking session (stops webcam capture)."""
-    global webcam_process, session_active
+    """Stop the cooking session (stops webcam capture and TTS)."""
+    global webcam_process, session_active, current_session_id, session_start_time
     
     try:
+        # Stop TTS quote scheduler if active
+        if current_session_id:
+            try:
+                quote_scheduler.stop_session(current_session_id)
+                print(f"✅ Stopped TTS quote scheduler for session {current_session_id}")
+            except Exception as e:
+                print(f"❌ Failed to stop TTS quote scheduler: {e}")
+        
         if webcam_process:
             # Terminate the process
             webcam_process.terminate()
@@ -192,10 +221,12 @@ def stop_session():
             webcam_process = None
         
         session_active = False
+        current_session_id = None
+        session_start_time = None
         
         return jsonify({
             'status': 'stopped',
-            'message': 'Webcam capture stopped successfully'
+            'message': 'Webcam capture and TTS stopped successfully'
         })
         
     except Exception as e:
@@ -214,6 +245,9 @@ def session_status():
         'session_active': session_active,
         'webcam_running': is_running,
         'pid': webcam_process.pid if is_running else None,
+        'session_id': current_session_id,
+        'session_start_time': session_start_time,
+        'tts_enabled': quote_scheduler.tts_service.is_initialized,
         'categories': get_category_stats()
     })
 
@@ -299,6 +333,15 @@ def internal_error(e):
 def cleanup_on_exit():
     """Clean up processes when server shuts down."""
     global webcam_process
+    
+    # Stop all TTS sessions
+    try:
+        quote_scheduler.cleanup_all_sessions()
+        print("✅ Cleaned up TTS sessions")
+    except Exception as e:
+        print(f"❌ Error cleaning up TTS sessions: {e}")
+    
+    # Stop webcam process
     if webcam_process:
         try:
             webcam_process.terminate()

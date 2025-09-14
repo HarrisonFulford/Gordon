@@ -38,7 +38,7 @@ interface SessionState {
   toggleSpeaker: () => void;
   
   // Gordon integration actions
-  startCapture: () => Promise<void>;
+  startCapture: (timeline?: Step[], sessionId?: string) => Promise<void>;
   stopCapture: () => Promise<void>;
   updateBackendStatus: () => Promise<void>;
   setCategoryStats: (stats: any) => void;
@@ -89,9 +89,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   toggleSpeaker: () => set((state) => ({ speakerEnabled: !state.speakerEnabled })),
   
   // Gordon integration actions
-  startCapture: async (timeline = []) => {
+  startCapture: async (timeline = [], sessionId) => {
     try {
-      await gordonAPI.startSession(timeline);
+      await gordonAPI.startSession(timeline, sessionId);
       set({ isCapturing: true });
       get().updateBackendStatus();
     } catch (error) {
@@ -137,9 +137,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         pausedDuration: 0,
         lastPauseTime: null
       });
+      
+      // Start webcam capture and TTS when session starts
+      get().startCapture(timeline, summary.id);
     }
-    // Start webcam capture when session starts
-    get().startCapture(timeline);
   },
   pauseSession: () => {
     const { summary, sessionStartTime, pausedDuration, lastPauseTime } = get();
