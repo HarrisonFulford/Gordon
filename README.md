@@ -1,75 +1,68 @@
-# Webcam Frame Capture Script
+# Gordon - AI Cooking Assistant
 
-This script captures frames from your MacBook's webcam at 1 frame per second and saves them with timestamp-based naming.
+An intelligent cooking companion that combines computer vision, AI recipe generation, and real-time voice guidance to enhance your cooking experience.
 
 ## Features
 
-- Captures 1 frame per second from webcam
-- Saves images with naming format: `YYYYMMDD_HHMMSSmmm.jpg`
-- Automatically manages the `stream-test` folder to keep only the 10 most recent images
-- Shows live webcam preview (press 'q' to quit)
+### 🧠 AI-Powered Recipe Generation
+- Upload ingredient photos to get personalized recipe suggestions
+- Powered by Cohere Aya Vision for intelligent ingredient analysis
+- Generates detailed cooking timelines with step-by-step instructions
 
-## Setup with Virtual Environment (Recommended)
+### 📸 Real-Time Kitchen Monitoring
+- Captures webcam frames during cooking sessions
+- AI-powered food ingredient classification (cheese, pickles, bread, tomatoes, lettuce, meat)
+- Automatic cleanup and categorization of captured ingredient images
 
-1. Create a virtual environment:
-```bash
-python3 -m venv venv
-```
+### 🎙️ Gordon Ramsay Voice Integration
+- **Custom Gordon Ramsay voice** using ElevenLabs TTS
+- **Timed motivational quotes** delivered at perfect moments during cooking
+- **Real-time audio guidance** synchronized with cooking steps
+- **Depends on**: `../voice-testing/` directory for TTS functionality
+- **Optional feature** - works without TTS if not configured
 
-2. Activate the virtual environment:
-```bash
-# On macOS/Linux:
-source venv/bin/activate
+### 🎬 Interactive Cooking Sessions
+- Live session management with play/pause controls
+- Visual timeline showing cooking progress
+- Keyboard shortcuts for easy control
+- Real-time status updates and notifications
 
-# On Windows:
-venv\Scripts\activate
-```
+## Technical Architecture
 
-3. Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
+### TTS Integration Design
+Gordon uses a **subprocess approach** to leverage the working `voice-testing` implementation:
 
-4. When you're done, deactivate the virtual environment:
-```bash
-deactivate
-```
+1. **Problem**: ElevenLabs 2.15.0 has Python 3.13 compatibility issues in complex environments
+2. **Solution**: Gordon calls the working `voice-testing/tts_gordon.py` via subprocess
+3. **Benefits**: 
+   - Uses your proven TTS setup without modification
+   - Zero risk to Gordon's core functionality
+   - Clean separation of concerns
+   - Future-proof when ElevenLabs fixes compatibility
 
-## Installation (Alternative - Global)
+### API Endpoints
+- `POST /api/recipes/generate` - Generate recipes from ingredient image
+- `POST /api/session/start` - Start cooking session (webcam + TTS)
+- `POST /api/session/stop` - Stop cooking session
+- `GET /api/session/status` - Get session status (includes TTS status)
+- `POST /api/speech/interact` - Interactive speech with Gordon
+- `GET /api/health` - Health check
 
-If you prefer not to use a virtual environment, you can install dependencies globally:
-```bash
-pip3 install -r requirements.txt
-```
+## Dependencies
 
-## Usage
+### Core Dependencies (Gordon)
+- `cohere>=5.0.0` - AI recipe generation and ingredient classification
+- `opencv-python>=4.5.0` - Webcam capture and image processing
+- `flask>=2.3.0` - API server
+- `pillow>=9.0.0` - Image manipulation
 
-Run the script:
-```bash
-python3 webcam_capture.py
-```
+### TTS Dependencies (Voice-Testing)
+- `elevenlabs==2.15.0` - Text-to-speech with custom Gordon voice
+- `python-dotenv==1.1.1` - Environment variable management
 
-- The script will start capturing frames and saving them to the `stream-test` folder
-- Press 'q' in the webcam preview window to quit
-- Or use Ctrl+C in the terminal to stop
+### Frontend Dependencies
+- React 18 with TypeScript
+- Radix UI components
+- Tailwind CSS styling
+- Zustand state management
 
-## Troubleshooting
-
-If you get "command not found" errors:
-- Use `python3` instead of `python`
-- Use `pip3` instead of `pip`
-- Make sure Python 3 is installed: `python3 --version`
-
-## File Management
-
-- Images are saved with timestamps in the format: `20241201_143052123.jpg`
-- The script automatically deletes the oldest images when more than 10 images are present
-- Only the 10 most recent images are kept in the folder
-
-## Configuration
-
-You can modify these settings in the script:
-- `MAX_IMAGES`: Maximum number of images to keep (default: 10)
-- `CAPTURE_INTERVAL`: Time between captures in seconds (default: 1.0)
-- `IMAGE_FORMAT`: Output image format (default: "jpg")
-- `OUTPUT_FOLDER`: Folder to save images (default: "stream-test")

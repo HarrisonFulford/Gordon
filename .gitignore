@@ -124,3 +124,10 @@ stream-test/*.jpeg
 stream-test/*.png
 stream-test/*.bmp
 stream-test/*.tiff
+node_modules/
+
+# Temporary files and directories
+temp_capture/
+temp_uploads/
+*.tmp
+*.temp
